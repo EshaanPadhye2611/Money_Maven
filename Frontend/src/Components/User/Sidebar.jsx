@@ -1,6 +1,6 @@
 
 
-import React, { useState } from 'react';
+import React, { useState} from 'react';
 import { RiComputerLine } from "react-icons/ri";
 import { SlCalender } from "react-icons/sl";
 import { IoAnalytics, IoFastFood } from "react-icons/io5";
@@ -11,6 +11,7 @@ import Modal from 'react-modal';
 import { ImFileEmpty } from "react-icons/im";
 import { ImBubbles2 } from "react-icons/im";
 import { FaRupeeSign } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 
 
 // Set the app element for react-modal
@@ -35,7 +36,11 @@ const Sidebar = () => {
   const closeDonateModal = () => {
     setDonateModalIsOpen(false);
   };
+  const navigate = useNavigate();
 
+  const handleNavigate = () => {
+    navigate("/expense"); // Redirects to the /expense route
+  };
   return (
     <div className="w-1/5 bg-gray-900 text-white p-6 h-[140vh] flex flex-col">
       {/* Logo Section */}
@@ -62,11 +67,13 @@ const Sidebar = () => {
             <IoAnalytics className="mr-3 text-2xl" />
             Stocks
           </li>
-
+          
+          <Link to ="/fd">
           <li className="flex items-center hover:text-green-400 cursor-pointer mt-7 px-1 py-2 rounded-lg mt-7" onClick={openModal}>
             <ImFileEmpty className="mr-3 text-2xl" />
-            Buy Bonds
+            Fixed Deposits
           </li>
+          </Link>
 
           {/* <li className="flex items-center hover:text-green-400 cursor-pointer mt-7 px-1 py-2 rounded-lg mt-7" onClick={openDonateModal}>
             <IoFastFood className="mr-3 text-2xl" />
@@ -92,7 +99,7 @@ const Sidebar = () => {
             className="w-24 h-24 mb-4 mx-auto rounded-full shadow-md"
           />
           
-                    <button className="w-full bg-green-500 text-white py-2 rounded-full hover:bg-green-600 transition duration-300 shadow-lg" onClick={openDonateModal}>
+                    <button className="w-full bg-green-500 text-white py-2 rounded-full hover:bg-green-600 transition duration-300 shadow-lg"  onClick={handleNavigate}>
                       Click here
                     </button>
                     

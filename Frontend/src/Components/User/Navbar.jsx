@@ -83,12 +83,12 @@ const NavBar = () => {
         >
           Insurance
         </Link>
-        <div 
-          className="text-lg font-bold text-black hover:text-green-800 pb-1 border-b-4 border-transparent hover:border-green-800 cursor-pointer"
-         
-        >
-            Bonds
-        </div>
+        <Link
+        to="/sip"
+        className="text-lg font-bold text-black hover:text-green-800 pb-1 border-b-4 border-transparent hover:border-green-800 cursor-pointer"
+      >
+        SIPs
+      </Link>
       </div>
 
       {/* Right Side */}
