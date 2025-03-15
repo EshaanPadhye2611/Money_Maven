@@ -27,7 +27,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/api/v1', authRoutes);
-app.use('api/v1/user',userRouter);
+app.use('/api/v1/user',userRouter);
 
 app.get('/hi', (req, res) => {
     res.send('Hello World');

@@ -12,16 +12,29 @@ export const giveUserDetails = asyncHandler( async(req,res) =>{
     const userId = req.user._id;
     const user = await User.findById(userId);
 
+    // const accessToken = jwt.sign(
+    //     {
+    //         _id: user._id,
+    //         role: user.role,
+    //         email: user.email,
+    //         name: user.name,
+    //     }, 
+    //     process.env.ACCESS_TOKEN_SECRET,
+    //     { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+    // );
+    
     const userDetails = {
         "username" : user.username,
-        "useremail": user.email,
+        "email": user.email,
         "phone": user.phone,
         "totalInvestment": user.totalInvestment,
         "bankBalance": user.bankBalance,
         "annualIncome" : user.annualIncome
+
     }
 
-    return res.status(200).json(
+    return res.status(200)
+    .json(
         new ApiResponse(
             200,
             userDetails,

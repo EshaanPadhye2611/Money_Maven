@@ -4,6 +4,6 @@ import {giveUserDetails} from "../controllers/user.controller.js";
 
 const router = Router();
 
-router.route("/userdetails").post(verifyUserJWT, giveUserDetails);
+router.route("/userdetails").get(verifyUserJWT, giveUserDetails);
 
 export default router;
