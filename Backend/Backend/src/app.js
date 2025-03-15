@@ -6,6 +6,7 @@ import passport from 'passport';
 import session from 'express-session';
 import { generateJWT } from './passportConfig.js';
 import authRoutes from './routes/auth.routes.js';
+import userRouter from './routes/user.routes.js'
 
 const app = express();
 app.use(cors({
@@ -26,6 +27,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/api/v1', authRoutes);
+app.use('api/v1/user',userRouter);
 
 app.get('/hi', (req, res) => {
     res.send('Hello World');
