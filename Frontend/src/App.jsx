@@ -7,6 +7,9 @@ import HomePage from './pages/Homepage/HomePage';
 import UserPage from './pages/UserPage/UserPage';
 import Form from './pages/Insurance_Form/Form';
 import Advisor from './pages/Advisor/Advisor';
+import FD from './pages/FD/FD';
+import Expense from './pages/Expense/Expense';
+import SIPs from './pages/SIPs/SIPs';
 
 //import Google_Translate from './Components/Google_Translate.jsx';
 
@@ -20,6 +23,9 @@ function App() {
           <Route path="/user" element={<UserPage />} />
           <Route path="/insurance" element={<Form/>} />
           <Route path="/advisor" element={<Advisor/>} />
+          <Route path="/fd" element={<FD/>} />
+          <Route path="/expense" element={<Expense/>} />
+          <Route path="/sip" element={<SIPs/>} />
 
           
         </Routes>

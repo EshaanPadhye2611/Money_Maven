@@ -29,6 +29,7 @@ const AuthForm = () => {
         : { email, password };
 
       const response = await axios.post(url, payload);
+      console.log(response);
 
       if (response.status === (isRegister ? 201 : 200)) {
         setMessage({
