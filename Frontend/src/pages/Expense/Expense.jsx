@@ -9,14 +9,21 @@ const categories = ["Food", "Bills", "Shopping", "Entertainment", "Travel"];
 
 const Expense = () => {
   const [expenses, setExpenses] = useState([]);
-  const [budget, setBudget] = useState(5000);
+  const [bankBalance, setBankBalance] = useState(() => {
+    return Number(localStorage.getItem("bankBalance")) || 5000; // Fetch bank balance from localStorage or default ₹5000
+  });
+  const [budget, setBudget] = useState(bankBalance);
   const [showChartModal, setShowChartModal] = useState(false);
 
   useEffect(() => {
     const storedExpenses = JSON.parse(localStorage.getItem("expenses"));
-    const storedBudget = JSON.parse(localStorage.getItem("budget"));
+    const storedBankBalance = Number(localStorage.getItem("bankBalance"));
+
     if (storedExpenses) setExpenses(storedExpenses);
-    if (storedBudget) setBudget(storedBudget);
+    if (storedBankBalance) {
+      setBankBalance(storedBankBalance);
+      setBudget(storedBankBalance); // Ensure budget syncs with bank balance
+    }
   }, []);
 
   useEffect(() => {
@@ -34,91 +41,113 @@ const Expense = () => {
 
   return (
     <div className="bg-blue-100 min-h-screen flex flex-col items-center p-6">
-      <motion.h1 className="text-4xl font-bold mb-4 text-gray-800" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}>
+      <motion.h1 className="text-4xl font-bold mb-4 text-gray-800" 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 1 }}>
         💰 Expense Tracker
       </motion.h1>
 
       <div className="flex space-x-4">
-        <button className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition" onClick={() => setShowChartModal(true)}>
+        <button className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition" 
+          onClick={() => setShowChartModal(true)}>
           View Charts 📊
         </button>
       </div>
 
-      <ExpenseTracker expenses={expenses} addExpense={addExpense} deleteExpense={deleteExpense} budget={budget} setBudget={setBudget} />
+      <ExpenseTracker 
+        expenses={expenses} 
+        addExpense={addExpense} 
+        deleteExpense={deleteExpense} 
+        budget={budget} 
+        setBudget={setBudget} 
+        bankBalance={bankBalance} 
+      />
 
       {showChartModal && <ChartModal expenses={expenses} onClose={() => setShowChartModal(false)} />}
     </div>
   );
 };
 
-const ExpenseTracker = ({ expenses, addExpense, deleteExpense, budget, setBudget }) => {
-    const [newExpense, setNewExpense] = useState({ name: "", amount: "", category: "", date: "" });
-  
-    const totalSpent = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
-    const remainingBudget = budget - totalSpent;
-  
-    const handleAddExpense = () => {
-      const amount = Number(newExpense.amount);
-  
-      if (!newExpense.name || !newExpense.amount || !newExpense.category || !newExpense.date) {
-        alert("Please fill all fields!");
-        return;
-      }
-  
-      if (amount <= 0) {
-        alert("Expense amount must be greater than zero!");
-        return;
-      }
-  
-      if (amount > remainingBudget) {
-        alert("Insufficient budget! Reduce the expense amount.");
-        return;
-      }
-  
-      addExpense(newExpense);
-      setNewExpense({ name: "", amount: "", category: "", date: "" });
-    };
-  
-    const handleBudgetChange = (e) => {
-      const newBudget = Number(e.target.value);
-      if (newBudget < totalSpent) {
-        alert("Budget cannot be less than total expenses!");
-        return;
-      }
-      setBudget(newBudget);
-    };
-  
-    return (
-      <motion.div className="bg-white p-6 rounded-lg shadow-md w-full max-w-2xl mt-6"
-        initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
-        
-        <h2 className="text-2xl font-semibold text-center mb-4">Set Budget</h2>
-        <input 
-          type="number" 
-          className="border p-2 rounded w-full mb-4" 
-          value={budget} 
-          onChange={handleBudgetChange} 
-          min={totalSpent} 
-        />
-  
-        <h2 className="text-2xl font-semibold text-center mb-4">Add New Expense</h2>
-        <div className="flex flex-col space-y-3">
-          <input type="text" placeholder="Expense Name" className="border p-2 rounded" value={newExpense.name} onChange={(e) => setNewExpense({ ...newExpense, name: e.target.value })} />
-          <input type="number" placeholder="Amount" className="border p-2 rounded" value={newExpense.amount} onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })} min="1" />
-          <select className="border p-2 rounded" value={newExpense.category} onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}>
-            <option value="">Select Category</option>
-            {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
-          </select>
-          <input type="date" className="border p-2 rounded" value={newExpense.date} onChange={(e) => setNewExpense({ ...newExpense, date: e.target.value })} />
-          <button className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition" onClick={handleAddExpense}>Add Expense</button>
-        </div>
-  
-        <h2 className="text-xl font-semibold mt-6">Budget Summary</h2>
-        <p>Total Spent: ₹{totalSpent}</p>
-        <p>Remaining: ₹{remainingBudget}</p>
-      </motion.div>
-    );
+const ExpenseTracker = ({ expenses, addExpense, deleteExpense, budget, setBudget, bankBalance }) => {
+  const [newExpense, setNewExpense] = useState({ name: "", amount: "", category: "", date: "" });
+
+  const totalSpent = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+  const remainingBudget = budget - totalSpent;
+
+  const handleAddExpense = () => {
+    const amount = Number(newExpense.amount);
+
+    if (!newExpense.name || !newExpense.amount || !newExpense.category || !newExpense.date) {
+      alert("Please fill all fields!");
+      return;
+    }
+
+    if (amount <= 0) {
+      alert("Expense amount must be greater than zero!");
+      return;
+    }
+
+    if (amount > remainingBudget) {
+      alert("Insufficient budget! Reduce the expense amount.");
+      return;
+    }
+
+    addExpense(newExpense);
+    setNewExpense({ name: "", amount: "", category: "", date: "" });
   };
+
+  const handleBudgetChange = (e) => {
+    const newBudget = Number(e.target.value);
+    
+    if (newBudget < totalSpent) {
+      alert("Budget cannot be less than total expenses!");
+      return;
+    }
+
+    if (newBudget > bankBalance) {
+      alert("Budget cannot exceed your bank balance!");
+      return;
+    }
+
+    setBudget(newBudget);
+  };
+
+  return (
+    <motion.div className="bg-white p-6 rounded-lg shadow-md w-full max-w-2xl mt-6"
+      initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
+      
+      <h2 className="text-2xl font-semibold text-center mb-4">Bank Balance</h2>
+      <p className="text-lg text-center font-semibold text-green-600 mb-2">₹{bankBalance}</p>
+
+      <h2 className="text-2xl font-semibold text-center mb-4">Set Budget (Cannot exceed Bank Balance)</h2>
+      <input 
+        type="number" 
+        className="border p-2 rounded w-full mb-4" 
+        value={budget} 
+        onChange={handleBudgetChange} 
+        min={totalSpent} 
+        max={bankBalance}
+      />
+
+      <h2 className="text-2xl font-semibold text-center mb-4">Add New Expense</h2>
+      <div className="flex flex-col space-y-3">
+        <input type="text" placeholder="Expense Name" className="border p-2 rounded" value={newExpense.name} onChange={(e) => setNewExpense({ ...newExpense, name: e.target.value })} />
+        <input type="number" placeholder="Amount" className="border p-2 rounded" value={newExpense.amount} onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })} min="1" />
+        <select className="border p-2 rounded" value={newExpense.category} onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}>
+          <option value="">Select Category</option>
+          {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+        </select>
+        <input type="date" className="border p-2 rounded" value={newExpense.date} onChange={(e) => setNewExpense({ ...newExpense, date: e.target.value })} />
+        <button className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition" onClick={handleAddExpense}>Add Expense</button>
+      </div>
+
+      <h2 className="text-xl font-semibold mt-6">Budget Summary</h2>
+      <p>Total Spent: ₹{totalSpent}</p>
+      <p>Remaining: ₹{remainingBudget}</p>
+    </motion.div>
+  );
+};
 
 const ChartModal = ({ expenses, onClose }) => {
     const categoryTotals = categories.map(cat =>
