@@ -34,8 +34,8 @@ const Header_1 = () => {
           <AlertTriangle className="text-red-500 w-6 h-6" />
           Expiring Soon
         </h3>
-        <p className="text-3xl font-bold text-red-600 mt-2">2 Policies</p>
-        <span className="text-sm text-gray-500">No policies expiring soon</span>
+        <p className="text-3xl font-bold text-red-600 mt-2">1 Policies</p>
+        <span className="text-sm text-gray-500">1 policies expiring soon</span>
       </div>
 
       {/* Stocks Downturn */}

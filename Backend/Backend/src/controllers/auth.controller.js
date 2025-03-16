@@ -23,18 +23,25 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
     const { email, password } = req.body;
     try {
+        console.log("Login request received for email:", email); // Log the email
+
         const user = await User.findOne({ email });
         if (!user) {
+            console.error("Error: User not found");
             return res.status(400).json({ message: 'Invalid credentials' });
         }
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            console.error("Error: Password does not match");
             return res.status(400).json({ message: 'Invalid credentials' });
         }
+
         const token = jwt.sign({ _id: user._id, email: user.email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRY });
         res.cookie('jwt', token, { httpOnly: true });
-        res.json({ message: 'Login successful',token: token  });
+        res.json({ message: 'Login successful', token: token });
     } catch (error) {
+        console.error("Error during login:", error.message); // Log the error message
         res.status(500).json({ error: error.message });
     }
 };

@@ -92,7 +92,7 @@ const HomePage = () => {
         Unlocking opportunities for financial growth
         </h2>
         <p className="text-sm sm:text-base md:text-lg lg:text-xl text-green-600 max-w-3xl mx-auto px-2">
-        Inspiring financial success, one investment at a time
+       We don't sell life insurance, but we sell what life insurance can do.
         </p>
       </section>
 

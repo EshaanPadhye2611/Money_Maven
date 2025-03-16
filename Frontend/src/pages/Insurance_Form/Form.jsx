@@ -1,38 +1,59 @@
 import React, { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
-import { Elements, useStripe, useElements } from "@stripe/react-stripe-js";
+import { Elements, useStripe } from "@stripe/react-stripe-js";
 import axios from "axios";
 
 const stripePromise = loadStripe("pk_test_51R2y5aQibNF2Uoy0dMksaKRqVHaby023TBA4QG0eGqb1r8mnMqoxdcYYwnq5AjBpWb1hZfkt6VZnLaDZ3i5zoHCE00c0rQkVks");
 
 const InsuranceForm = () => {
-  const [hasInsurance, setHasInsurance] = useState(null);
-  const [policyId, setPolicyId] = useState("");
-  const [policyNumber, setPolicyNumber] = useState(null);
   const [formData, setFormData] = useState({
     age: "",
-    income: "",
+    annualIncome: "",
     coverageAmount: "",
     policyType: "",
+    tenure: "1",
     aadhaarNumber: "",
-    agreeToTerms: false,
   });
+  const [premium, setPremium] = useState(null);
 
-  const [price, setPrice] = useState(null);
+  // Base premium rates (per ₹1000 coverage) based on policy type
+  const policyRates = {
+    "term-life": 1.2,
+    "whole-life": 1.8,
+    "health": 2.5,
+    "auto": 3.0,
+    "travel": 1.5,
+    "property": 2.2,
+  };
 
+  // Function to calculate insurance premium
+  const calculatePremium = (coverage, tenure, policyType, age) => {
+    if (!coverage || !tenure || !policyType || !age) return null;
+
+    const rate = policyRates[policyType] || 2.0;
+    const ageFactor = age < 30 ? 1.0 : age < 50 ? 1.2 : 1.5;
+
+    return ((coverage / 1000) * rate * tenure * ageFactor).toFixed(2);
+  };
+
+  // Handle form input changes
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
 
-    if (name === "coverageAmount") {
-      const coverage = parseFloat(value);
-      if (!isNaN(coverage)) {
-        setPrice(coverage * 0.05); // 5% of coverage as premium
+    if (["coverageAmount", "tenure", "policyType", "age"].includes(name)) {
+      const coverage = parseFloat(name === "coverageAmount" ? value : formData.coverageAmount);
+      const tenure = parseInt(name === "tenure" ? value : formData.tenure);
+      const policyType = name === "policyType" ? value : formData.policyType;
+      const age = parseInt(name === "age" ? value : formData.age);
+
+      if (!isNaN(coverage) && !isNaN(tenure) && policyType && !isNaN(age)) {
+        setPremium(calculatePremium(coverage, tenure, policyType, age));
       } else {
-        setPrice(null);
+        setPremium(null);
       }
     }
   };
@@ -40,136 +61,114 @@ const InsuranceForm = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-green-100">
       <div className="bg-white p-8 rounded-lg shadow-2xl w-96">
-        <h2 className="text-2xl font-semibold text-center text-gray-700 mb-4">Insurance Verification</h2>
-
-        {hasInsurance === null && (
-          <div className="text-center">
-            <p className="text-lg font-medium">Do you have an insurance policy?</p>
-            <div className="flex justify-center mt-4 space-x-4">
-              <button onClick={() => setHasInsurance(true)} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
-                Yes
-              </button>
-              <button onClick={() => setHasInsurance(false)} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
-                No
-              </button>
-            </div>
-          </div>
-        )}
-
-        {hasInsurance === true && (
+        <h2 className="text-2xl font-semibold text-center text-gray-700 mb-4">Buy Insurance</h2>
+        <form className="space-y-4">
           <div>
-            <label className="block font-medium mt-6">Enter Your Policy ID:</label>
-            <input type="text" value={policyId} onChange={(e) => setPolicyId(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md" />
-            <button className="mt-4 w-full bg-green-500 hover:bg-green-700 text-white py-2 rounded-md">
-              Search Policy
-            </button>
+            <label className="block font-medium">Age:</label>
+            <input type="number" name="age" value={formData.age} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
           </div>
-        )}
-
-        {hasInsurance === false && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold text-center text-gray-700 mb-4">Buy Insurance</h2>
-            <form className="space-y-4">
-              <div>
-                <label className="block font-medium">Age:</label>
-                <input type="number" name="age" value={formData.age} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-              </div>
-              <div>
-                <label className="block font-medium">Annual Income:</label>
-                <input type="number" name="income" value={formData.income} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-              </div>
-              <div>
-                <label className="block font-medium">Coverage Amount:</label>
-                <input type="number" name="coverageAmount" value={formData.coverageAmount} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-              </div>
-              <div>
-                <label className="block font-medium">Aadhaar Number:</label>
-                <input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-              </div>
-              <div>
-                <label className="block font-medium">Policy Type:</label>
-                <select name="policyType" value={formData.policyType} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md">
-                  <option value="">Select Policy Type</option>
-                  <option value="term-life">Term Life</option>
-                  <option value="whole-life">Whole Life</option>
-                  <option value="health">Health</option>
-                  <option value="auto">Auto</option>
-                  <option value="travel">Travel</option>
-                  <option value="property">Property</option>
-                </select>
-              </div>
-
-              {price !== null && (
-                <div className="mt-2 text-center text-lg font-semibold text-green-700">
-                  Premium: ₹{price.toLocaleString()}
-                </div>
-              )}
-
-              <div>
-                <input type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange} className="mr-2" />
-                <label>I agree to the <a href="#" className="text-blue-600 underline">terms & conditions</a>.</label>
-              </div>
-            </form>
-
-            <StripeCheckoutButton formData={formData} price={price} setPolicyNumber={setPolicyNumber} />
-            {policyNumber && (
-              <div className="mt-4 text-center text-green-700 font-bold">
-                Your Policy Number: {policyNumber}
-              </div>
-            )}
+          <div>
+            <label className="block font-medium">Annual Income:</label>
+            <input type="number" name="annualIncome" value={formData.annualIncome} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
           </div>
-        )}
+          <div>
+            <label className="block font-medium">Coverage Amount (₹):</label>
+            <input type="number" name="coverageAmount" value={formData.coverageAmount} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
+          </div>
+          <div>
+            <label className="block font-medium">Tenure:</label>
+            <select name="tenure" value={formData.tenure} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md">
+              {[...Array(30)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>{i + 1}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block font-medium">Aadhaar Number:</label>
+            <input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
+          </div>
+          <div>
+            <label className="block font-medium">Policy Type:</label>
+            <select name="policyType" value={formData.policyType} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md">
+              <option value="">Select Policy Type</option>
+              <option value="Term Life">Term Life</option>
+              <option value="Whole Life">Whole Life</option>
+              <option value="Health">Health</option>
+              <option value="Auto">Auto</option>
+              <option value="Travel">Travel</option>
+              <option value="Property">Property</option>
+            </select>
+          </div>
+
+          {premium !== null && (
+            <div className="mt-2 text-center text-lg font-semibold text-green-700">
+              Premium: ₹{premium.toLocaleString()}
+            </div>
+          )}
+        </form>
+        <StripeCheckoutButton formData={formData} premium={premium} />
       </div>
     </div>
   );
 };
 
-const StripeCheckoutButton = ({ formData, price, setPolicyNumber }) => {
+const StripeCheckoutButton = ({ formData, premium }) => {
   const stripe = useStripe();
 
   const handlePayment = async () => {
-    if (!formData.agreeToTerms) {
-      alert("Please agree to the terms before proceeding.");
+    if (!premium) {
+      alert("Please enter valid insurance details.");
       return;
     }
-
-    if (!price) {
-      alert("Please enter a valid coverage amount.");
+  
+    // Retrieve token from localStorage (or your auth state)
+    const token = localStorage.getItem("token"); // Ensure you store this during login
+  
+    if (!token) {
+      alert("Unauthorized: Please log in first.");
       return;
     }
-
+  
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/create-checkout-session`, {
-        amount: price , // Convert to cents
-        currency: "usd",
-        description: `Insurance Policy: ${formData.policyType}`,
-      });
-
-      const session = response.data;
+      console.log("Submitting form data...");
+      console.log("Form data:", formData);
+  
+      // First, submit the form data
+      const formResponse = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/v1/user/insuranceForm`,
+        formData, // Moved this outside headers
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // 🛠 Include token properly
+          },
+        }
+      );
+  
+      console.log("Form submitted successfully!", formResponse.data);
+  
+      console.log("Processing payment...");
+      const paymentResponse = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/create-checkout-session`,
+        {
+          amount: premium,
+          currency: "usd",
+          description: `Insurance Policy: ${formData.policyType}, Tenure: ${formData.tenure} years`,
+        }
+      );
+  
+      const session = paymentResponse.data;
+      console.log("Stripe session:", session);
       await stripe.redirectToCheckout({ sessionId: session.id });
-
-      setTimeout(() => {
-        const policyNum = `POLICY-${Math.floor(100000 + Math.random() * 900000)}`;
-        setPolicyNumber(policyNum);
-        alert(`Payment successful! Your Policy Number is: ${policyNum}`);
-      }, 5000);
+  
     } catch (err) {
-      console.error("Payment Error:", err);
-      alert("Error processing payment. Please try again.");
+      console.error("Error:", err);
+      alert("Error processing payment.");
     }
   };
-
-  return (
-    <button onClick={handlePayment} className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-2 rounded-md">
-      Pay ₹{price ? price.toLocaleString() : "0"} with Stripe
-    </button>
-  );
+  return <button onClick={handlePayment} className="w-full mt-4 bg-green-600 text-white py-2 rounded-md">Pay ₹{premium}</button>;
 };
 
 export default function App() {
-  return (
-    <Elements stripe={stripePromise}>
-      <InsuranceForm />
-    </Elements>
-  );
+  return <Elements stripe={stripePromise}><InsuranceForm /></Elements>;
 }

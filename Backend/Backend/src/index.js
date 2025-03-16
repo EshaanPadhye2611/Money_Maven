@@ -11,7 +11,7 @@ import Stripe from 'stripe';
 
 const port = process.env.PORT || 4000;
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY); // Initialize Stripe
-
+console.log("Stripe Key:", process.env.STRIPE_SECRET_KEY);
 connectDB()
     .then(() => {
         app.listen(port, () => {
@@ -45,8 +45,8 @@ app.post("/create-checkout-session", async (req, res) => {
                 },
             ],
             mode: "payment",
-            success_url: "http://localhost:5173/user",  // React success page
-            cancel_url: "http://localhost:5173/user",
+            success_url: "http://localhost:5173/insurance",  // React success page
+            cancel_url: "http://localhost:5173/insurance",
         });
 
         res.json({ id: session.id });

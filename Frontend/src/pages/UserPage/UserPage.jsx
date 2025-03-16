@@ -30,8 +30,9 @@ const UserPage = () => {
         }
 
         const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/v1/user/userdetails`, {
+          withCredentials: true,
           headers: {
-            "Authorization": `Bearer ${token}`,
+            "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
 

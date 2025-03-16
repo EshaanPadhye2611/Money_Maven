@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify"; // Import react-toastify
 import "react-toastify/dist/ReactToastify.css"; // Import styles
@@ -30,39 +29,27 @@ const SipInvestment = () => {
       setFunds(dummyFunds);
       setLoading(false);
     }, 1000);
-
-    axios.get("http://localhost:5000/portfolio").then((res) => setPortfolio(res.data));
   }, []);
 
-  const handleInvest = async () => {
+  const handleInvest = () => {
     if (!selectedFund || sipAmount < 500) {
-      alert("Please select a fund and enter a valid amount (Min ₹500).");
+      toast.error("Please select a fund and enter a valid amount (Min ₹500).");
       return;
     }
 
     const investment = { fund: selectedFund.name, amount: sipAmount, frequency };
 
-    try {
-      const res = await axios.post("http://localhost:5000/invest", investment);
+    // Get current date and time
+    const now = new Date();
+    const startDate = now.toLocaleString();
 
-      if (res.data.success) {
-        // Get current date and time
-        const now = new Date();
-        const startDate = now.toLocaleString();
+    // Show toast notification with start date
+    toast.success(`✅ SIP Started for ${selectedFund.name} on ${startDate}`, {
+      position: "top-right",
+      autoClose: 5000,
+    });
 
-        // Show toast notification with start date
-        toast.success(`✅ SIP Started for ${selectedFund.name} on ${startDate}`, {
-          position: "top-right",
-          autoClose: 5000,
-        });
-
-        setPortfolio([...portfolio, res.data.sip]);
-      } else {
-        toast.error("⚠️ Investment failed. Please try again.");
-      }
-    } catch (error) {
-      toast.error("⚠️ Error connecting to server.");
-    }
+    setPortfolio([...portfolio, investment]);
   };
 
   return (
@@ -140,9 +127,9 @@ const SipInvestment = () => {
         <h2 className="text-2xl font-bold text-center text-gray-700">📊 Your Portfolio</h2>
         {portfolio.length > 0 ? (
           <div className="mt-6">
-            {portfolio.map((sip) => (
+            {portfolio.map((sip, index) => (
               <motion.div
-                key={sip.id}
+                key={index}
                 className="p-4 bg-gray-50 rounded-lg mb-4 border-l-4 border-blue-500 shadow-sm"
                 whileHover={{ scale: 1.03 }}
               >

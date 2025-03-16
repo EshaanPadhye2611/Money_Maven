@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
 
 // FD Interest Rate Slabs (Example)
 const BANK_INTEREST_RATES = {
@@ -11,20 +12,18 @@ const BANK_INTEREST_RATES = {
 
 const FD = () => {
   const [formData, setFormData] = useState({
-    name: "",
+    fullName: "",
     age: "",
-    principal: "",
+    depositAmount: "",
     tenure: "",
-    fdType: "regular",
-    interestRate: "",
-    compounding: "quarterly",
+    
   });
 
   const [fdRecords, setFdRecords] = useState([]);
   const [fdId, setFdId] = useState("");
   const [foundFD, setFoundFD] = useState(null);
   const [calculator, setCalculator] = useState({
-    principal: "",
+    depositAmount: "",
     tenure: "",
     rate: "",
     compounding: "quarterly",
@@ -61,12 +60,12 @@ const FD = () => {
   };
 
   // Handle FD submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { name, age, principal, tenure, interestRate, compounding } = formData;
+    const { fullName, age, depositAmount, tenure, interestRate, compounding } = formData;
 
-    if (!name || !age || !principal || !tenure || !interestRate) {
+    if (!fullName || !age || !depositAmount || !tenure || !interestRate) {
       toast.error("Please fill all fields correctly!");
       return;
     }
@@ -76,7 +75,7 @@ const FD = () => {
       return;
     }
 
-    if (principal < 5000) {
+    if (depositAmount < 5000) {
       toast.error("Minimum FD amount is ₹5,000.");
       return;
     }
@@ -87,21 +86,41 @@ const FD = () => {
     }
 
     const fdID = uuidv4();
-    const maturityAmount = calculateFD(principal, interestRate, tenure, compounding);
+    const maturityAmount = calculateFD(depositAmount, interestRate, tenure, compounding);
 
     const newFD = {
-      fdID,
-      name,
+      
+      fullName,
       age,
-      principal,
+      depositAmount,
       tenure,
-      interestRate,
-      maturityAmount,
-      compounding,
+    
+     
     };
 
-    setFdRecords([...fdRecords, newFD]);
-    toast.success(`FD created successfully! Your FD ID is: ${fdID}`);
+    try {
+      // Sending the FD data to the backend using axios
+      const response = await axios.post("api/v1/user/fdForm", newFD,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // 🛠 Include token properly
+          },
+        }
+        
+      );
+      
+      
+      if (response.status === 200) {
+        setFdRecords([...fdRecords, newFD]);
+        toast.success(`FD created successfully! Your FD ID is: ${fdID}`);
+      } else {
+        toast.success("FD added successfully!");
+      }
+    } catch (error) {
+      console.error("Error submitting FD form:", error);
+      toast.error("Error submitting FD form. Please try again.");
+    }
   };
 
   // FD Verification
@@ -117,14 +136,14 @@ const FD = () => {
 
   // FD Calculator Function
   const handleCalculateFD = () => {
-    const { principal, tenure, rate, compounding } = calculator;
+    const { depositAmount, tenure, rate, compounding } = calculator;
 
-    if (!principal || !tenure || !rate) {
+    if (!depositAmount || !tenure || !rate) {
       toast.error("Enter valid values for calculation.");
       return;
     }
 
-    const maturityAmount = calculateFD(principal, rate, tenure, compounding);
+    const maturityAmount = calculateFD(depositAmount, rate, tenure, compounding);
     setCalculator({ ...calculator, maturityAmount });
   };
 
@@ -136,23 +155,80 @@ const FD = () => {
       <div className="bg-white p-6 rounded-lg shadow-lg w-96">
         <h2 className="text-2xl font-semibold text-center text-gray-700 mb-4">Fixed Deposit Form</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" className="w-full px-3 py-2 border rounded-md" required />
-          <input type="number" name="age" value={formData.age} onChange={handleChange} placeholder="Age" className="w-full px-3 py-2 border rounded-md" required />
-          <input type="number" name="principal" value={formData.principal} onChange={handleChange} placeholder="Deposit Amount (₹)" className="w-full px-3 py-2 border rounded-md" required />
-          <input type="number" name="tenure" value={formData.tenure} onChange={handleChange} placeholder="Tenure (Years)" className="w-full px-3 py-2 border rounded-md" required />
+          <input
+            type="text"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
+            placeholder="Full Name"
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          />
+          <input
+            type="number"
+            name="age"
+            value={formData.age}
+            onChange={handleChange}
+            placeholder="Age"
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          />
+          <input
+            type="number"
+            name="depositAmount"
+            value={formData.depositAmount}
+            onChange={handleChange}
+            placeholder="Deposit Amount (₹)"
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          />
+          <input
+            type="number"
+            name="tenure"
+            value={formData.tenure}
+            onChange={handleChange}
+            placeholder="Tenure (Years)"
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          />
 
-          <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md">Create FD</button>
+          <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md">
+            Create FD
+          </button>
         </form>
       </div>
 
       {/* FD Calculator */}
       <div className="mt-6 bg-white p-6 rounded-lg shadow-lg w-96">
         <h2 className="text-xl font-semibold text-center text-gray-700 mb-4">FD Calculator</h2>
-        <input type="number" name="principal" value={calculator.principal} onChange={(e) => setCalculator({ ...calculator, principal: e.target.value })} placeholder="Principal (₹)" className="w-full px-3 py-2 border rounded-md" />
-        <input type="number" name="tenure" value={calculator.tenure} onChange={(e) => setCalculator({ ...calculator, tenure: e.target.value })} placeholder="Tenure (Years)" className="w-full px-3 py-2 border rounded-md" />
-        <input type="number" name="rate" value={calculator.rate} onChange={(e) => setCalculator({ ...calculator, rate: e.target.value })} placeholder="Interest Rate (%)" className="w-full px-3 py-2 border rounded-md" />
+        <input
+          type="number"
+          name="depositAmount"
+          value={calculator.depositAmount}
+          onChange={(e) => setCalculator({ ...calculator, depositAmount: e.target.value })}
+          placeholder="Principal (₹)"
+          className="w-full px-3 py-2 border rounded-md"
+        />
+        <input
+          type="number"
+          name="tenure"
+          value={calculator.tenure}
+          onChange={(e) => setCalculator({ ...calculator, tenure: e.target.value })}
+          placeholder="Tenure (Years)"
+          className="w-full px-3 py-2 border rounded-md"
+        />
+        <input
+          type="number"
+          name="rate"
+          value={calculator.rate}
+          onChange={(e) => setCalculator({ ...calculator, rate: e.target.value })}
+          placeholder="Interest Rate (%)"
+          className="w-full px-3 py-2 border rounded-md"
+        />
 
-        <button onClick={handleCalculateFD} className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md">Calculate</button>
+        <button onClick={handleCalculateFD} className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md">
+          Calculate
+        </button>
 
         {calculator.maturityAmount && <p className="mt-4 text-center text-green-700 font-bold">Maturity Amount: ₹{calculator.maturityAmount}</p>}
       </div>

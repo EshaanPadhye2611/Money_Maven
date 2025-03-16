@@ -32,10 +32,7 @@ const AuthForm = () => {
       console.log(response);
 
       if (response.status === (isRegister ? 201 : 200)) {
-        setMessage({
-          text: isRegister ? "Registration successful! Please log in." : "Login successful!",
-          type: "success",
-        });
+        localStorage.setItem("accessToken", response.data.token);
 
         if (isRegister) {
           // After registration, switch to login form
