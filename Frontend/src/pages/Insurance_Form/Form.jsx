@@ -58,6 +58,24 @@ const InsuranceForm = () => {
     }
   };
 
+  // Validate form data before submission
+  const validateFormData = () => {
+    const { age, annualIncome, coverageAmount } = formData;
+    if (age < 18 || age > 90) {
+      alert("Age must be between 18 and 90.");
+      return false;
+    }
+    if (annualIncome <= 0) {
+      alert("Annual income must be a positive number.");
+      return false;
+    }
+    if (coverageAmount <= 0) {
+      alert("Coverage amount must be a positive number.");
+      return false;
+    }
+    return true;
+  };
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-green-100">
       <div className="bg-white p-8 rounded-lg shadow-2xl w-96">
@@ -65,19 +83,50 @@ const InsuranceForm = () => {
         <form className="space-y-4">
           <div>
             <label className="block font-medium">Age:</label>
-            <input type="number" name="age" value={formData.age} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
+            <input
+              type="number"
+              name="age"
+              value={formData.age}
+              onChange={handleChange}
+              min="18"
+              max="90"
+              required
+              className="w-full px-3 py-2 border rounded-md"
+            />
           </div>
           <div>
             <label className="block font-medium">Annual Income:</label>
-            <input type="number" name="annualIncome" value={formData.annualIncome} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
+            <input
+              type="number"
+              name="annualIncome"
+              value={formData.annualIncome}
+              onChange={handleChange}
+              min="1"
+              required
+              className="w-full px-3 py-2 border rounded-md"
+            />
           </div>
           <div>
             <label className="block font-medium">Coverage Amount (₹):</label>
-            <input type="number" name="coverageAmount" value={formData.coverageAmount} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
+            <input
+              type="number"
+              name="coverageAmount"
+              value={formData.coverageAmount}
+              onChange={handleChange}
+              min="1"
+              required
+              className="w-full px-3 py-2 border rounded-md"
+            />
           </div>
           <div>
             <label className="block font-medium">Tenure:</label>
-            <select name="tenure" value={formData.tenure} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md">
+            <select
+              name="tenure"
+              value={formData.tenure}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border rounded-md"
+            >
               {[...Array(30)].map((_, i) => (
                 <option key={i + 1} value={i + 1}>{i + 1}</option>
               ))}
@@ -85,11 +134,24 @@ const InsuranceForm = () => {
           </div>
           <div>
             <label className="block font-medium">Aadhaar Number:</label>
-            <input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
+            <input
+              type="text"
+              name="aadhaarNumber"
+              value={formData.aadhaarNumber}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border rounded-md"
+            />
           </div>
           <div>
             <label className="block font-medium">Policy Type:</label>
-            <select name="policyType" value={formData.policyType} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md">
+            <select
+              name="policyType"
+              value={formData.policyType}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border rounded-md"
+            >
               <option value="">Select Policy Type</option>
               <option value="Term Life">Term Life</option>
               <option value="Whole Life">Whole Life</option>
@@ -106,13 +168,13 @@ const InsuranceForm = () => {
             </div>
           )}
         </form>
-        <StripeCheckoutButton formData={formData} premium={premium} />
+        <StripeCheckoutButton formData={formData} premium={premium} validateFormData={validateFormData} />
       </div>
     </div>
   );
 };
 
-const StripeCheckoutButton = ({ formData, premium }) => {
+const StripeCheckoutButton = ({ formData, premium, validateFormData }) => {
   const stripe = useStripe();
 
   const handlePayment = async () => {
@@ -120,19 +182,23 @@ const StripeCheckoutButton = ({ formData, premium }) => {
       alert("Please enter valid insurance details.");
       return;
     }
-  
+
+    if (!validateFormData()) {
+      return;
+    }
+
     // Retrieve token from localStorage (or your auth state)
     const token = localStorage.getItem("token"); // Ensure you store this during login
-  
+
     if (!token) {
       alert("Unauthorized: Please log in first.");
       return;
     }
-  
+
     try {
       console.log("Submitting form data...");
       console.log("Form data:", formData);
-  
+
       // First, submit the form data
       const formResponse = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/v1/user/insuranceForm`,
@@ -144,28 +210,29 @@ const StripeCheckoutButton = ({ formData, premium }) => {
           },
         }
       );
-  
+
       console.log("Form submitted successfully!", formResponse.data);
-  
+
       console.log("Processing payment...");
       const paymentResponse = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/create-checkout-session`,
         {
           amount: premium,
-          currency: "usd",
+          currency: "inr",
           description: `Insurance Policy: ${formData.policyType}, Tenure: ${formData.tenure} years`,
         }
       );
-  
+
       const session = paymentResponse.data;
       console.log("Stripe session:", session);
       await stripe.redirectToCheckout({ sessionId: session.id });
-  
+
     } catch (err) {
       console.error("Error:", err);
       alert("Error processing payment.");
     }
   };
+
   return <button onClick={handlePayment} className="w-full mt-4 bg-green-600 text-white py-2 rounded-md">Pay ₹{premium}</button>;
 };
 

@@ -51,6 +51,30 @@ const AdvisorySystem = () => {
     setTimeout(() => setAppointmentConfirmed(false), 3000);
   };
 
+  // Get today's date in the required format (yyyy-mm-dd)
+  const today = new Date().toISOString().split("T")[0];
+
+  // Function to check if the time is in the future
+  const isTimeInFuture = (time, date) => {
+    const currentDate = new Date();
+    const selectedDate = new Date(date);
+    const [hour, minute] = time.split(":").map((num) => parseInt(num, 10));
+    const ampm = time.includes("AM") ? "AM" : "PM";
+
+    // Adjust hour based on AM/PM
+    let timeHour = hour;
+    if (ampm === "PM" && timeHour !== 12) {
+      timeHour += 12;
+    } else if (ampm === "AM" && timeHour === 12) {
+      timeHour = 0;
+    }
+
+    // Create a new Date object for the selected time
+    const timeDate = new Date(selectedDate.setHours(timeHour, minute, 0, 0));
+
+    return timeDate > currentDate;
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-300 p-6">
       <h2 className="text-3xl font-bold mb-6 text-gray-800 animate-fadeIn">Insurance Advisory</h2>
@@ -83,27 +107,30 @@ const AdvisorySystem = () => {
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
+                min={today} // Set min date to today's date
               />
 
               {/* Available Slots */}
               <p className="mt-2 text-gray-700">Available Slots:</p>
               <div className="flex flex-wrap gap-2">
-                {advisor.availableSlots.map((slot) => (
-                  <button
-                    key={slot}
-                    className={`px-3 py-1 border rounded-lg shadow-sm transition-all ${
-                      selectedSlot === slot
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-200 hover:bg-blue-400 hover:text-white"
-                    }`}
-                    onClick={() => {
-                      setSelectedAdvisor(advisor);
-                      setSelectedSlot(slot);
-                    }}
-                  >
-                    {slot}
-                  </button>
-                ))}
+                {advisor.availableSlots
+                  .filter((slot) => selectedDate && isTimeInFuture(slot, selectedDate)) // Filter out past slots
+                  .map((slot) => (
+                    <button
+                      key={slot}
+                      className={`px-3 py-1 border rounded-lg shadow-sm transition-all ${
+                        selectedSlot === slot
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-200 hover:bg-blue-400 hover:text-white"
+                      }`}
+                      onClick={() => {
+                        setSelectedAdvisor(advisor);
+                        setSelectedSlot(slot);
+                      }}
+                    >
+                      {slot}
+                    </button>
+                  ))}
               </div>
             </div>
           ))}

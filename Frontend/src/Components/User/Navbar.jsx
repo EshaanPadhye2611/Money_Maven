@@ -120,7 +120,9 @@ const NavBar = () => {
 
       <div className="flex items-center space-x-8">
         <div className="text-lg font-bold text-black hover:text-green-800 cursor-pointer">
+          <Link to = '/user'>
           Overview
+          </Link>
         </div>
         <div 
           className="text-lg font-bold text-black hover:text-green-800 cursor-pointer"

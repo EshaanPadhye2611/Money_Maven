@@ -222,7 +222,7 @@ const HomePage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-white p-6 rounded-lg shadow-lg transform hover:-translate-y-2 transition duration-300">
               <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="User" className="w-16 h-16 rounded-full mx-auto mb-4"/>
-              <p className="text-gray-600 italic mb-4">"Investify is one of the best apps we can use for financial stability."</p>
+              <p className="text-gray-600 italic mb-4">"Money Maven is one of the best apps we can use for financial stability."</p>
               <h4 className="font-semibold text-green-800">Atharva Ajagekar</h4>
               <p className="text-sm text-green-600">OurSelfStudy Owner</p>
             </div>
@@ -249,8 +249,10 @@ const HomePage = () => {
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Invest in us?</h2>
             <p className="text-xl mb-8">Join our website to dive into the vison of investment</p>
             <div className="flex flex-col md:flex-row justify-center items-center gap-4 mb-12">
-              <button  className="bg-white text-green-800 px-8 py-3 rounded-full text-lg font-semibold hover:bg-green-100 transform hover:scale-105 transition duration-300 shadow-xl">
+              <button  className="bg-white text-green-800 px-8 py-3 rounded-full text-lg font-semibold hover:bg-green-100 transform hover:scale-105 transition duration-300 shadow-xl"
+              onClick={toggleLoginPopup}>
                 Get Started Now
+                
               </button>
               <button className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-white hover:text-green-800 transform hover:scale-105 transition duration-300">
                 Learn More

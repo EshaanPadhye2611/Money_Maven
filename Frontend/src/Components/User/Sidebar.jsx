@@ -63,10 +63,10 @@ const Sidebar = () => {
             </li>
           </Link>
 
-          <li className="flex items-center hover:text-green-400 cursor-pointer transition duration-200 mt-7">
+          {/* <li className="flex items-center hover:text-green-400 cursor-pointer transition duration-200 mt-7">
             <IoAnalytics className="mr-3 text-2xl" />
             Stocks
-          </li>
+          </li> */}
           
           <Link to ="/fd">
           <li className="flex items-center hover:text-green-400 cursor-pointer mt-7 px-1 py-2 rounded-lg mt-7" onClick={openModal}>

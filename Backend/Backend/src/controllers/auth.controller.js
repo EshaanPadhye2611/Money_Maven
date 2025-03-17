@@ -1,24 +1,78 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user.model.js';
+import { sendOTP, verifyOTP } from "../utils/otpUtil.js";
 
-export const registerUser = async (req, res) => {
-    const { email, password, username, phone, bankBalance, annualIncome } = req.body;
-    try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new User({ email, password: hashedPassword, username, phone, bankBalance, annualIncome });
-        await user.save();
-        const token = jwt.sign({ id: user._id, email: user.email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRY });
-        res.cookie('jwt', token, { httpOnly: true });
-        res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+/**
+ * Function to send OTP before registration
+ */
+export const sendOtp = async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
     }
-};
+  
+    try {
+      const otpSent = await sendOTP(email);
+      if (!otpSent) {
+        return res.status(500).json({ message: "Failed to send OTP" });
+      }
+      res.status(200).json({ success: true, message: "OTP sent successfully" });
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      res.status(500).json({ message: "Error sending OTP" });
+    }
+  };
+
+/**
+ * Register user after OTP verification
+ */
+export const registerUser = async (req, res) => {
+    const { email, password, username, phone, bankBalance, annualIncome, otp } = req.body;
+  
+    if (!verifyOTP(email, otp)) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+  
+    try {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+  
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = new User({ email, password: hashedPassword, username, phone, bankBalance, annualIncome });
+      await user.save();
+  
+      const token = jwt.sign({ id: user._id, email: user.email }, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+      });
+  
+      res.status(201).json({ message: "User registered successfully", token });
+    } catch (error) {
+      console.error("Error registering user:", error);
+      res.status(500).json({ message: "Error registering user" });
+    }
+  };
+
+
+// export const registerUser = async (req, res) => {
+//     const { email, password, username, phone, bankBalance, annualIncome } = req.body;
+//     try {
+//         const existingUser = await User.findOne({ email });
+//         if (existingUser) {
+//             return res.status(400).json({ message: 'User already exists' });
+//         }
+//         const hashedPassword = await bcrypt.hash(password, 10);
+//         const user = new User({ email, password: hashedPassword, username, phone, bankBalance, annualIncome });
+//         await user.save();
+//         const token = jwt.sign({ id: user._id, email: user.email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRY });
+//         res.cookie('jwt', token, { httpOnly: true });
+//         res.status(201).json({ message: 'User registered successfully' });
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// };
 
 export const loginUser = async (req, res) => {
     const { email, password } = req.body;
